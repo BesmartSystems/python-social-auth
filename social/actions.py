@@ -73,6 +73,15 @@ def do_complete(strategy, login, user=None, redirect_name='next',
         else:
             url = setting_url(strategy, 'INACTIVE_USER_URL', 'LOGIN_ERROR_URL',
                               'LOGIN_URL')
+            if strategy.setting('INACTIVE_USER_REDIRECT_WITH_ID') is True:
+                try:
+                    is_api_call = request.COOKIES.get('is_api_call', None)
+                except:
+                    is_api_call = None
+                url += '?user_id='+str(user.id)
+                if (is_api_call is not None):
+                    url = '/api/login/social/fail/'
+                    url += '?user_id='+str(user.id)+'&reason=user_already_exist'
     else:
         url = setting_url(strategy, 'LOGIN_ERROR_URL', 'LOGIN_URL')
 
