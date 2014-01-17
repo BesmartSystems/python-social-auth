@@ -10,6 +10,8 @@ class DjangoUserMixin(UserMixin):
     """Social Auth association model"""
     @classmethod
     def changed(cls, user):
+        if (user.email == ''):
+            user.email = None
         user.save()
 
     def set_extra_data(self, extra_data=None):
@@ -56,7 +58,11 @@ class DjangoUserMixin(UserMixin):
     def create_user(cls, *args, **kwargs):
         if 'username' in kwargs:
             kwargs[cls.username_field()] = kwargs.pop('username')
-        return cls.user_model().objects.create_user(*args, **kwargs)
+        user = cls.user_model().objects.create_user(*args, **kwargs)
+        if user.email == '':
+            user.email = None
+            user.save()
+        return user
 
     @classmethod
     def get_user(cls, pk):
