@@ -75,9 +75,12 @@ def do_complete(strategy, login, user=None, redirect_name='next',
                               'LOGIN_URL')
             if strategy.setting('INACTIVE_USER_REDIRECT_WITH_ID') is True:
                 try:
-                    is_api_call = strategy.request.COOKIES.get('is_api_call', None)
+                    is_api_call = strategy.request.COOKIES.get('is_api_call')
                 except:
-                    is_api_call = None
+                    try:
+                        is_api_call = strategy.session_get('is_api_call')
+                    except:
+                        is_api_call = None
                 url += '?user_id='+str(user.id)
                 if (is_api_call is not None):
                     url = '/api/login/social/fail/'
