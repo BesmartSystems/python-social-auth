@@ -43,6 +43,14 @@ def do_complete(strategy, login, user=None, redirect_name='next',
         user = strategy.complete(user=user, request=strategy.request,
                                  *args, **kwargs)
 
+    try:
+        is_api_call = strategy.request.COOKIES.get('is_api_call')
+    except:
+        try:
+            is_api_call = strategy.session_get('is_api_call')
+        except:
+            is_api_call = None
+
     if user and not isinstance(user, strategy.storage.user.user_model()):
         return user
 
@@ -53,6 +61,8 @@ def do_complete(strategy, login, user=None, redirect_name='next',
             url = setting_url(strategy, redirect_value,
                               'NEW_ASSOCIATION_REDIRECT_URL',
                               'LOGIN_REDIRECT_URL')
+        if (is_api_call is not None):
+            url = '/api/login/social/success/'
     elif user:
         if user_is_active(user):
             # catch is_new/social_user in case login() resets the instance
@@ -70,23 +80,20 @@ def do_complete(strategy, login, user=None, redirect_name='next',
             else:
                 url = setting_url(strategy, redirect_value,
                                   'LOGIN_REDIRECT_URL')
+            if (is_api_call is not None):
+                url = '/api/login/social/success/'
         else:
             url = setting_url(strategy, 'INACTIVE_USER_URL', 'LOGIN_ERROR_URL',
                               'LOGIN_URL')
             if strategy.setting('INACTIVE_USER_REDIRECT_WITH_ID') is True:
-                try:
-                    is_api_call = strategy.request.COOKIES.get('is_api_call')
-                except:
-                    try:
-                        is_api_call = strategy.session_get('is_api_call')
-                    except:
-                        is_api_call = None
                 url += '?user_id='+str(user.id)
                 if (is_api_call is not None):
                     url = '/api/login/social/fail/'
                     url += '?user_id='+str(user.id)+'&reason=user_already_exist'
     else:
         url = setting_url(strategy, 'LOGIN_ERROR_URL', 'LOGIN_URL')
+
+
 
     if redirect_value and redirect_value != url:
         redirect_value = quote(redirect_value)
